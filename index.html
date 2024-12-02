@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games Hub</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; text-align: center; background-color: #f4f4f4; }
+        header { background-color: #333; color: white; padding: 20px; }
+        section { margin: 20px; padding: 20px; }
+        a { text-decoration: none; color: white; background: blue; padding: 10px 20px; margin: 10px; display: inline-block; border-radius: 5px; }
+        a:hover { background: darkblue; }
+        button { margin: 10px; padding: 10px 20px; background: green; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: darkgreen; }
+        textarea { width: 90%; max-width: 500px; margin: 10px; padding: 10px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome to Games Hub</h1>
+        <p>Click a game to play or create a new game using ChatGPT!</p>
+    </header>
+
+    <section>
+        <h2>Games Available</h2>
+        <a href="#guess-the-number" onclick="openGame('guessTheNumber')">Guess the Number</a>
+        <a href="#rock-paper-scissors" onclick="openGame('rockPaperScissors')">Rock-Paper-Scissors</a>
+    </section>
+
+    <section>
+        <h2>Create a New Game with ChatGPT</h2>
+        <textarea id="game-idea" rows="4" placeholder="Describe the game you want to create..."></textarea><br>
+        <button onclick="generateGame()">Create Game</button>
+        <p id="chatbot-response"></p>
+    </section>
+
+    <!-- Game Containers -->
+    <div id="games" style="display: none;">
+        <!-- Guess the Number Game -->
+        <div id="guessTheNumber" style="display: none;">
+            <h1>Guess the Number</h1>
+            <p>Guess a number between 1 and 100:</p>
+            <input type="number" id="guess" placeholder="Enter your guess">
+            <button onclick="checkGuess()">Submit</button>
+            <p id="feedback"></p>
+            <script>
+                const randomNumber = Math.floor(Math.random() * 100) + 1;
+                function checkGuess() {
+                    const userGuess = parseInt(document.getElementById('guess').value);
+                    const feedback = document.getElementById('feedback');
+                    if (userGuess === randomNumber) {
+                        feedback.innerText = "Congratulations! You guessed it!";
+                    } else if (userGuess < randomNumber) {
+                        feedback.innerText = "Too low. Try again.";
+                    } else {
+                        feedback.innerText = "Too high. Try again.";
+                    }
+                }
+            </script>
+        </div>
+
+        <!-- Rock-Paper-Scissors Game -->
+        <div id="rockPaperScissors" style="display: none;">
+            <h1>Rock-Paper-Scissors</h1>
+            <button onclick="playRPS('rock')">Rock</button>
+            <button onclick="playRPS('paper')">Paper</button>
+            <button onclick="playRPS('scissors')">Scissors</button>
+            <p id="rps-result"></p>
+            <script>
+                function playRPS(playerChoice) {
+                    const choices = ['rock', 'paper', 'scissors'];
+                    const computerChoice = choices[Math.floor(Math.random() * 3)];
+                    let result = '';
+                    if (playerChoice === computerChoice) {
+                        result = `It's a tie! Both chose ${playerChoice}.`;
+                    } else if (
+                        (playerChoice === 'rock' && computerChoice === 'scissors') ||
+                        (playerChoice === 'paper' && computerChoice === 'rock') ||
+                        (playerChoice === 'scissors' && computerChoice === 'paper')
+                    ) {
+                        result = `You win! ${playerChoice} beats ${computerChoice}.`;
+                    } else {
+                        result = `You lose! ${computerChoice} beats ${playerChoice}.`;
+                    }
+                    document.getElementById('rps-result').innerText = result;
+                }
+            </script>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function openGame(gameId) {
+            const games = document.querySelectorAll('#games > div');
+            games.forEach(game => game.style.display = 'none'); // Hide all games
+            document.getElementById(gameId).style.display = 'block'; // Show selected game
+        }
+
+        const chatApiKey = 'your-openai-api-key-here'; // Replace with your OpenAI API key
+        async function generateGame() {
+            const userIdea = document.getElementById('game-idea').value;
+            const responseArea = document.getElementById('chatbot-response');
+            responseArea.innerText = "Generating your game...";
+            try {
+                const response = await axios.post('https://api.openai.com/v1/completions', {
+                    model: "text-davinci-003",
+                    prompt: `Create a basic HTML, CSS, and JavaScript game for this idea: "${userIdea}".`,
+                    max_tokens: 500,
+                }, {
+                    headers: { 'Authorization': `Bearer ${chatApiKey}` }
+                });
+                const gameCode = response.data.choices[0].text.trim();
+                const newWindow = window.open();
+                newWindow.document.write(`<html><head><title>Your New Game</title></head><body>${gameCode}</body></html>`);
+            } catch (error) {
+                responseArea.innerText = "Something went wrong. Try again.";
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
